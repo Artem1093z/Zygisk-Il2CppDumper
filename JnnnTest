@@ -1,15 +1,3 @@
---!strict
--- PNG Loader (FULL VERSION: Ghost Paint + 16bit Fix + Full UI + Full Auth)
--- Restore: Input Method Settings (Auto/Touch/Mouse)
--- Restore: Full Premium Auth Design (Purple/Glass/Bubbles)
--- Fixed: Draw & Donate support
--- Fixed: Speed Draw Mouse Support
--- FIXED 1: PNG Grayscale Transparency Support
--- FIXED 2: Input Method Dropdown Logic
-
---===========================================================================
--- [0] SERVICES
---===========================================================================
 local Players            = game:GetService("Players")
 local HttpService        = game:GetService("HttpService")
 local CoreGui            = game:GetService("CoreGui")
@@ -21,15 +9,11 @@ local GuiService         = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 
---===========================================================================
--- [1] FILE SYSTEM SETUP (Auto-Clean & Temp Folder)
---===========================================================================
 local TempFolder = "pngtemppp"
 if makefolder and not isfolder(TempFolder) then
     makefolder(TempFolder)
 end
 
--- Try to clean old temp files on load
 pcall(function()
     if listfiles and delfile then
         local files = listfiles(TempFolder)
@@ -39,11 +23,8 @@ pcall(function()
     end
 end)
 
-local LastTempFile = nil -- Variable to track current image file
+local LastTempFile = nil
 
---===========================================================================
--- [2] AUTH CONFIGURATION (PURPLE THEME)
---===========================================================================
 local PandaConfig = {
     Identifier = "nagahub", 
     FileName   = "VelvetKeypg.txt"
@@ -75,9 +56,6 @@ if not request_func then
     end
 end
 
---===========================================================================
--- [3] AUTH LOGIC
---===========================================================================
 local function GetKeyLink(serviceId, hwid)
     return "https://pandadevelopment.net/getkey?service=" .. tostring(serviceId) .. "&hwid=" .. tostring(hwid)
 end
@@ -102,16 +80,11 @@ local function ValidateKey(key, serviceId, hwid)
     end
 end
 
---===========================================================================
--- [3.5] GHOST PAINT LOGIC (For Draw & Donate)
---===========================================================================
 local function GhostPaint_DrawDonate(color)
     local PG = LocalPlayer:FindFirstChild("PlayerGui")
     local MainUI = PG and PG:FindFirstChild("MainGameUI")
     if not MainUI then return end
 
-    -- === ANTI-FLASH LOOP ===
-    -- Keeps the window off-screen for the duration of the change
     local connection
     connection = RunService.RenderStepped:Connect(function()
         local win = MainUI:FindFirstChild("ColorWindow")
@@ -138,7 +111,6 @@ local function GhostPaint_DrawDonate(color)
         end
     end
 
-    -- 1. Open Window (Ghostly)
     local ColorWin = MainUI:FindFirstChild("ColorWindow")
     if not ColorWin or not ColorWin.Visible then
         local OpenBtn = MainUI:FindFirstChild("Designer") 
@@ -163,10 +135,8 @@ local function GhostPaint_DrawDonate(color)
         return 
     end
     
-    -- Ensure it's off-screen
     ColorWin.Position = UDim2.new(10, 0, 10, 0) 
 
-    -- 2. Input RGB
     local Props = ColorWin:FindFirstChild("Properties")
     local RGB = Props and Props:FindFirstChild("RGB")
     if RGB then
@@ -182,7 +152,6 @@ local function GhostPaint_DrawDonate(color)
         end
     end
 
-    -- 3. Confirm
     local ConfirmBtn = ColorWin:FindFirstChild("Content")
         and ColorWin.Content:FindFirstChild("Bottom")
         and ColorWin.Content.Bottom:FindFirstChild("Buttons")
@@ -192,19 +161,12 @@ local function GhostPaint_DrawDonate(color)
         Fire(ConfirmBtn)
     end
 
-    -- Cleanup connection shortly after
     task.delay(0.2, function()
         if connection then connection:Disconnect() end
     end)
 end
 
---===========================================================================
--- [4] MAIN SCRIPT LOADER
---===========================================================================
 local function LoadProjectVelvet()
-    ------------------------------------------------------------------------
-    -- CLEANUP OLD GUI
-    ------------------------------------------------------------------------
     if getgenv().AuthGui then 
         local gui  = getgenv().AuthGui
         local main = gui:FindFirstChild("MainFrame")
@@ -223,14 +185,8 @@ local function LoadProjectVelvet()
     if getgenv().FloatingBtnGui then getgenv().FloatingBtnGui:Destroy() end
     if getgenv().PreviewOverlay then getgenv().PreviewOverlay:Destroy() end
 
-    ------------------------------------------------------------------------
-    -- LOAD RAYFIELD
-    ------------------------------------------------------------------------
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-    ------------------------------------------------------------------------
-    -- CONFIG & VARIABLES
-    ------------------------------------------------------------------------
     local Config = {
         FileName       = "",
         Delay          = 0.005,
@@ -257,9 +213,6 @@ local function LoadProjectVelvet()
     local CurrentImage, LastSentColor = nil, nil
     local ResSlider, ScaleSlider, StatusParagraph
 
-    ------------------------------------------------------------------------
-    -- PREVIEW ENGINE (OVERLAY)
-    ------------------------------------------------------------------------
     local PreviewGui = Instance.new("ScreenGui")
     PreviewGui.Name            = "PreviewOverlay"
     PreviewGui.IgnoreGuiInset  = true
@@ -284,9 +237,6 @@ local function LoadProjectVelvet()
     stroke.ApplyStrokeMode  = Enum.ApplyStrokeMode.Border
     stroke.Parent           = PreviewImage
 
-    ------------------------------------------------------------------------
-    -- GEOMETRY
-    ------------------------------------------------------------------------
     local function GetExactBounds()
         if not CurrentImage then return 0, 0, 0, 0 end
         local Viewport = workspace.CurrentCamera.ViewportSize
@@ -310,9 +260,6 @@ local function LoadProjectVelvet()
 
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdatePreview)
 
-    ------------------------------------------------------------------------
-    -- DRAG LOGIC
-    ------------------------------------------------------------------------
     local Dragging, DragStart, StartOffset = false, nil, nil
 
     PreviewImage.InputBegan:Connect(function(input)
@@ -339,9 +286,6 @@ local function LoadProjectVelvet()
         end
     end)
 
-    ------------------------------------------------------------------------
-    -- HELPER FUNCTIONS
-    ------------------------------------------------------------------------
     local function FetchAvatar(u)
         local s, uid = pcall(function() return Players:GetUserIdFromNameAsync(u) end)
         if not s or not uid then return nil,"User not found" end
@@ -355,7 +299,6 @@ local function LoadProjectVelvet()
 
     local SprayPaint_Settings, SpeedDraw_Module = nil, nil
     local function DetectGame()
-        -- 1. Draw & Donate Check
         local pg = Players.LocalPlayer:FindFirstChild("PlayerGui")
         if pg and pg:FindFirstChild("MainGameUI") then
              local mgui = pg.MainGameUI
@@ -366,7 +309,6 @@ local function LoadProjectVelvet()
              end
         end
 
-        -- 2. Spray Paint
         if Players.LocalPlayer:FindFirstChild("PaintSettings") then
             SprayPaint_Settings = Players.LocalPlayer.PaintSettings
             Config.TargetGame   = "Spray Paint"
@@ -374,7 +316,6 @@ local function LoadProjectVelvet()
             return "Spray Paint"
         end
         
-        -- 3. Speed Draw
         local function Scan(root)
             for _, v in pairs(root:GetDescendants()) do
                 if v:IsA("ModuleScript") and v.Name == "ColorChooser" then
@@ -413,9 +354,6 @@ local function LoadProjectVelvet()
         end
     end
 
-    ------------------------------------------------------------------------
-    -- INPUT LOGIC (FIXED INPUT SWITCHING)
-    ------------------------------------------------------------------------
     local IsTouchPlatform = UserInputService.TouchEnabled
     
     local moveAbs   = rawget(getgenv(), "mousemoveabs") or rawget(_G, "mousemoveabs")
@@ -428,18 +366,15 @@ local function LoadProjectVelvet()
 
         local useMouse = false
         
-        -- FIXED: Strict comparison and handling
         if Config.InputMethod == "MouseCustom" then
             if moveAbs then
                 useMouse = true
             else
-                -- Fallback to Touch if Mouse requested but not available
                 useMouse = false
             end
         elseif Config.InputMethod == "Touch" then
             useMouse = false
         else
-            -- AUTO
             if moveAbs and mouseDown and mouseUp then
                 useMouse = true
             else
@@ -453,7 +388,6 @@ local function LoadProjectVelvet()
             if delay > 0 then task.wait(delay) end
             mouseUp()
         else
-            -- Fallback to VIM (Touch)
             pcall(function()
                 VirtualInputManager:SendTouchEvent(1, 0, x, y) 
                 task.wait() 
@@ -462,9 +396,6 @@ local function LoadProjectVelvet()
         end
     end
 
-    ------------------------------------------------------------------------
-    -- PNG LIB (FIXED GRAYSCALE TRANSPARENCY)
-    ------------------------------------------------------------------------
     local PNG_Lib = nil
     pcall(function()
         local function DL(p) 
@@ -512,14 +443,13 @@ local function LoadProjectVelvet()
             Deflate:InflateZlib({Input=BinaryReader.new(table.concat(zlib)),Output=function(b) idx=idx+1 res[idx]=string.char(b) end})
             local h_r = BinaryReader.new(chunks.IHDR)
             local w,h = h_r:ReadInt32(), h_r:ReadInt32()
-            local dep = h_r:ReadByte() -- BIT DEPTH
-            local ct  = h_r:ReadByte() -- COLOR TYPE
+            local dep = h_r:ReadByte() 
+            local ct  = h_r:ReadByte() 
             
-            -- [FIX STARTS HERE] Correct Bytes Per Pixel Calculation
             local samples = 1
-            if ct == 2 then samples = 3 -- RGB
-            elseif ct == 4 then samples = 2 -- Grayscale + Alpha (FIXED)
-            elseif ct == 6 then samples = 4 -- RGBA
+            if ct == 2 then samples = 3 
+            elseif ct == 4 then samples = 2 
+            elseif ct == 6 then samples = 4 
             end
             
             local bpp = math.max(1, samples * (dep/8))
@@ -539,23 +469,22 @@ local function LoadProjectVelvet()
             if not self.Bit[y] then return 0,0,0,0 end
             local i = (x-1)*self.B+1
             
-            -- [FIX STARTS HERE] Correct Pixel Reading
             local function get(offset) return self.Bit[y][offset] or 0 end
             
-            if self.B == 1 then -- Grayscale (8 bit)
+            if self.B == 1 then 
                 local g = get(i)
                 return g, g, g, 255
-            elseif self.B == 2 then -- Grayscale + Alpha (8 bit) [FIXED]
+            elseif self.B == 2 then 
                 local g = get(i)
                 local a = get(i+1)
                 return g, g, g, a
-            elseif self.B == 3 then -- RGB (8 bit)
+            elseif self.B == 3 then 
                 return get(i), get(i+1), get(i+2), 255
-            elseif self.B == 4 then -- RGBA (8 bit)
+            elseif self.B == 4 then 
                 return get(i), get(i+1), get(i+2), get(i+3)
-            elseif self.B == 6 then -- RGB (16 bit) - Grab High Byte
+            elseif self.B == 6 then 
                 return get(i), get(i+2), get(i+4), 255
-            elseif self.B >= 8 then -- RGBA (16 bit) - Grab High Byte
+            elseif self.B >= 8 then 
                 return get(i), get(i+2), get(i+4), get(i+6)
             end
             
@@ -564,9 +493,6 @@ local function LoadProjectVelvet()
         PNG_Lib = PNG
     end)
 
-    ------------------------------------------------------------------------
-    -- AUTOTUNE
-    ------------------------------------------------------------------------
     local function RunAutoTune()
         if not CurrentImage then return end
         local Max = math.max(CurrentImage.W, CurrentImage.H)
@@ -583,9 +509,6 @@ local function LoadProjectVelvet()
         UpdatePreview()
     end
 
-    ------------------------------------------------------------------------
-    -- IMAGE PROCESSOR (CACHE BUST ADDED)
-    ------------------------------------------------------------------------
     local function ProcessLoadedImage(data, sourceName, isAsset, isManualFile)
         if not PNG_Lib then
             StatusParagraph:Set({Title = "Error", Content = "PNG Lib not loaded"})
@@ -600,17 +523,13 @@ local function LoadProjectVelvet()
             if isAsset then
                 pcall(function() PreviewImage.Image = getcustomasset(sourceName) end)
             elseif isManualFile then
-                -- Load from root workspace directly (dropdown)
                 pcall(function() PreviewImage.Image = getcustomasset(sourceName) end)
             else
-                -- Raw Data (URL or Avatar) -> CACHE BUST
                 if writefile and getcustomasset then
-                    -- Clean old
                     if LastTempFile and isfile(LastTempFile) then
                         delfile(LastTempFile)
                     end
                     
-                    -- Generate unique name to force overlay update
                     local rnd = tostring(math.random(100000, 999999))
                     local uniquePath = TempFolder .. "/img_" .. rnd .. ".png"
                     LastTempFile = uniquePath
@@ -632,9 +551,6 @@ local function LoadProjectVelvet()
         end
     end
 
-    ------------------------------------------------------------------------
-    -- GUI (RAYFIELD AMETHYST)
-    ------------------------------------------------------------------------
     local Window = Rayfield:CreateWindow({
         Name                       = "PNG Loader - " .. DetectedGameName,
         LoadingTitle               = "Loading...",
@@ -645,7 +561,6 @@ local function LoadProjectVelvet()
         DisableRayfieldPrompts     = true
     })
 
-    -- TABS ORDER: Main, AutoTune, Filter, Avatar, Settings
     local MainTab     = Window:CreateTab("Main", nil)
     local AutoTab     = Window:CreateTab("Auto Tune", nil)
     local FilterTab   = Window:CreateTab("Filters", nil)
@@ -664,7 +579,6 @@ local function LoadProjectVelvet()
         local files    = {}
         local rawFiles = listfiles and listfiles("") or {}
         for _, path in pairs(rawFiles) do
-            -- Ensure we only list files in root
             local fileName = path:match("([^/\\]+)$")
             if path:sub(-4):lower() == ".png" and not path:find(TempFolder) then
                 table.insert(files, fileName)
@@ -679,7 +593,6 @@ local function LoadProjectVelvet()
         Options       = GetPngFiles(),
         CurrentOption = "",
         Callback      = function(O) 
-            -- SAFE CASTING FOR RAYFIELD
             local val = (type(O) == "table" and O[1]) or O
             Config.FileName = val
             if Config.FileName ~= "No PNGs found" and readfile then
@@ -693,7 +606,6 @@ local function LoadProjectVelvet()
         Callback = function() FileDropdown:Refresh(GetPngFiles(), true) end
     })
 
-    -- URL SECTION
     MainTab:CreateSection("URL Loader")
     local UrlInput = ""
     MainTab:CreateInput({
@@ -718,15 +630,9 @@ local function LoadProjectVelvet()
         end
     })
 
-    ------------------------------------------------------------------------
-    -- AUTO TUNE TAB
-    ------------------------------------------------------------------------
     AutoTab:CreateSlider({Name="Target Size (Px)", Range={50,800}, Increment=10, CurrentValue=150, Callback=function(V) Config.TargetSize=V RunAutoTune() end})
     AutoTab:CreateSlider({Name="Compression Level", Range={1,5}, Increment=0.5, CurrentValue=Config.Compression, Callback=function(V) Config.Compression=V RunAutoTune() end})
 
-    ------------------------------------------------------------------------
-    -- FILTER TAB
-    ------------------------------------------------------------------------
     FilterTab:CreateToggle({Name="Inverse Colors", CurrentValue=false, Callback=function(V) Config.Inverse=V end})
     FilterTab:CreateToggle({Name="Ignore Alpha", CurrentValue=true, Callback=function(V) Config.IgnoreAlpha=V end})
     FilterTab:CreateToggle({Name="Ignore White", CurrentValue=false, Callback=function(V) Config.IgnoreWhite=V end})
@@ -734,9 +640,6 @@ local function LoadProjectVelvet()
     FilterTab:CreateToggle({Name="Ignore Black", CurrentValue=false, Callback=function(V) Config.IgnoreBlack=V end})
     FilterTab:CreateSlider({Name="Black Threshold", Range={0,100}, Increment=1, CurrentValue=10, Callback=function(V) Config.BlackThreshold=V end})
 
-    ------------------------------------------------------------------------
-    -- AVATAR TAB
-    ------------------------------------------------------------------------
     local AvatarUser = ""
     local AvatarInput = AvatarTab:CreateInput({
         Name                     = "Username",
@@ -779,29 +682,21 @@ local function LoadProjectVelvet()
         end
     })
 
-    ------------------------------------------------------------------------
-    -- SETTINGS TAB (RESTORED + FIXED)
-    ------------------------------------------------------------------------
     ResSlider=SettingsTab:CreateSlider({Name="Shrink (Res)", Range={1,100}, Increment=1, CurrentValue=1, Callback=function(V) Config.Res=V UpdatePreview() end})
     ScaleSlider=SettingsTab:CreateSlider({Name="Expand (Scale)", Range={1,100}, Increment=1, CurrentValue=1, Callback=function(V) Config.Scale=V UpdatePreview() end})
     SettingsTab:CreateSlider({Name="Delay (s)", Range={0,0.1}, Increment=0.001, CurrentValue=0.005, Callback=function(V) Config.Delay=V end})
     
-    -- RESTORED DROPDOWN + FIX
     SettingsTab:CreateDropdown({
         Name = "Input Method", 
         Options = {"Auto","Touch","MouseCustom"}, 
         CurrentOption = "Auto", 
         Callback = function(O) 
-            -- FIXED: Handle Rayfield Table Return
             local val = (type(O) == "table" and O[1]) or O
             Config.InputMethod = val
             print("Input Method Set To:", val)
         end
     })
 
-    ------------------------------------------------------------------------
-    -- DRAW LOGIC
-    ------------------------------------------------------------------------
     local function ToggleDrawing()
         Config.IsDrawing = not Config.IsDrawing
 
@@ -862,9 +757,6 @@ local function LoadProjectVelvet()
         end
     end
 
-    ------------------------------------------------------------------------
-    -- FLOATING BUTTON (TOUCH ONLY)
-    ------------------------------------------------------------------------
     if IsTouchPlatform then
         local FloatingGui = Instance.new("ScreenGui")
         FloatingGui.Name           = "FloatingBtnGui"
@@ -912,10 +804,6 @@ local function LoadProjectVelvet()
         if ok and data then ProcessLoadedImage(data, "GitHub discord.png", false, false) end
     end)
 end
-
---===========================================================================
--- [5] AUTH GUI (FULL PURPLE DESIGN RESTORED)
---===========================================================================
 
 if getgenv().AuthGui then getgenv().AuthGui:Destroy() end
 
