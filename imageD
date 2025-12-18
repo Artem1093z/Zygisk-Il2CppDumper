@@ -93,16 +93,16 @@ do
 end
 
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-if PlayerGui:FindFirstChild("NeuralDock_V9") then PlayerGui.NeuralDock_V9:Destroy() end
+if PlayerGui:FindFirstChild("VelvetDock_") then PlayerGui.VelvetDock_:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "NeuralDock_V9"
+ScreenGui.Name = "VelvetDock_"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.DisplayOrder = 999999
 
-local function LoadNeuralDock()
+local function LoadVelvetDock()
     local SETTINGS = {Quality=1000, Speed=400, Overlap=2.2, RotateFix=true, AutoCenter=true}
     local UI_STATE = {Collapsed=false, CurrentTab=nil, Buttons={}, IsDrawing=false}
     
@@ -417,7 +417,7 @@ local function LoadKeySystem()
             Title.Text = "ACCESS GRANTED"; Title.TextColor3 = COLORS.Success
             task.wait(0.8)
             TweenService:Create(KeyFrame, TweenInfo.new(0.3), {Size = UDim2.new(0,0,0,0), BackgroundTransparency=1}):Play()
-            task.wait(0.3); KeyFrame:Destroy(); LoadNeuralDock()
+            task.wait(0.3); KeyFrame:Destroy(); LoadVelvetDock()
         else
             TweenService:Create(KeyStroke, TweenInfo.new(0.1), {Color = COLORS.Error}):Play()
             Box.Text = ""; Box.PlaceholderText = "INVALID KEY"
